@@ -66,7 +66,12 @@ class Webhook(with_metaclass(Registerable, object)):
         self.event = event
 
     def validate(self):
-        evt = stripe.Event.retrieve(self.event.stripe_id)
+        try:
+            evt = stripe.Event.retrieve(self.event.stripe_id)
+        except:
+            # For managed accounts.
+            # See https://groups.google.com/a/lists.stripe.com/forum/#!topic/api-discuss/AWh8O-SjL_M
+            evt = stripe.Event.retrieve(self.event.stripe_id, stripe_account=self.event.webhook_message['user_id'])
         self.event.validated_message = json.loads(
             json.dumps(
                 evt.to_dict(),
